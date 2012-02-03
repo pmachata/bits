@@ -359,6 +359,12 @@ public:
     return const_iterator (this);
   }
 
+  const_iterator
+  cbegin () const
+  {
+    return const_iterator (this);
+  }
+
   iterator
   end ()
   {
@@ -367,6 +373,12 @@ public:
 
   const_iterator
   end () const
+  {
+    return const_iterator (this, N);
+  }
+
+  const_iterator
+  cend () const
   {
     return const_iterator (this, N);
   }
