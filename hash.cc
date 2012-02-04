@@ -243,6 +243,11 @@ tests ()
     h5.insert (vals.rbegin (), vals.rend ());
     std::cout << "." << std::flush;
     assert (h5 == h);
+
+    std::cout << "." << std::flush;
+    h5.clear ();
+    assert (h5.begin () == h5.end ());
+    assert (h5.find (test.extra ()) == h5.end ());
   }
 }
 
