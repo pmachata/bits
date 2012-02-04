@@ -1,5 +1,11 @@
 #include "hash.hh"
 
+#include <vector>
+#include <algorithm>
+#include <map>
+#include <cassert>
+#include <iostream>
+
 template <class Key>
 struct silly_hash
 {
@@ -54,12 +60,6 @@ struct hash_string
     return h;
   }
 };
-
-#include <vector>
-#include <algorithm>
-#include <map>
-#include <cassert>
-#include <iostream>
 
 template <int N, class T>
 struct TestVector;
