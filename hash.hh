@@ -354,6 +354,20 @@ public:
     return std::make_pair (iterator (this, it._pos), true);
   }
 
+  std::pair<iterator, bool>
+  insert (const_iterator, const_reference emt)
+  {
+    return insert (emt);
+  }
+
+  template <class InputIterator>
+  void
+  insert (InputIterator first, InputIterator last)
+  {
+    for (; first != last; ++first)
+      insert (*first);
+  }
+
   const_iterator
   find (key_type const &e) const
   {
