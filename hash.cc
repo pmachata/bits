@@ -89,13 +89,15 @@ struct TestVector<N, int>
 
 namespace
 {
-  template <int M> struct ln {
-    enum { value = ln<M / 2>::value + 1 };
+  template <int M> struct slen {
+    enum { value = slen<M / 2>::value + 1 };
   };
-  template <> struct ln<1> {
+  template <> struct slen<1> {
     enum { value = 0 };
   };
-  template <> struct ln<0> {};
+  template <> struct slen<0> {
+    enum { value = 0 };
+  };
 }
 
 template <int N>
@@ -116,7 +118,7 @@ struct TestVector<N, std::string>
 	if (c < ' ')
 	  c += ' ';
 	key += char (c);
-	if (key.size () > ::ln<N>::value)
+	if (key.size () > ::slen<N>::value)
 	  key = key.substr (1, key.size ());
       }
   }
@@ -132,6 +134,7 @@ template <class T, class U>
 void
 dummy_insert_test (T const &test, U &h)
 {
+  std::cout << "." << std::flush;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
       auto p = h.insert (std::make_pair (*i, *i));
@@ -144,6 +147,7 @@ template <class T, class U>
 void
 membership_tests (T const &test, U &h)
 {
+  std::cout << "." << std::flush;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
       auto it = h.find (*i);
@@ -151,6 +155,7 @@ membership_tests (T const &test, U &h)
       assert (it->first == *i);
     }
 
+  std::cout << "." << std::flush;
   for (auto it = h.begin (); it != h.end (); ++it)
     {
       assert (std::find (test.begin (), test.end (), it->first) != test.end ());
@@ -170,6 +175,7 @@ tests ()
   assert (h == h);
 
   std::vector<std::pair<typename H::key_type, typename H::mapped_type> > vals;
+  std::cout << "0" << std::flush;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
       auto pair = std::make_pair (*i, *i);
@@ -178,11 +184,15 @@ tests ()
       assert (p.first != h.end ());
       assert (p.second);
     }
+
   assert (h == h);
-  assert (h.begin () != h.end ());
+  assert (h.size () == vals.size ());
+  if (h.size () > 0)
+    assert (h.begin () != h.end ());
   assert (h.begin () == h.begin ());
   assert (h.end () == h.end ());
 
+  std::cout << "1" << std::flush;
   {
     typename H::iterator it = h.begin ();
     typename H::iterator jt = it;
@@ -191,7 +201,7 @@ tests ()
     ++jt;
     assert (it == jt);
   }
-
+  std::cout << "2" << std::flush;
   {
     auto h2 = h;
     assert (h2 == h);
@@ -213,20 +223,25 @@ tests ()
     assert (!(h2 == h));
   }
 
+  std::cout << "3" << std::flush;
   {
     H const &h3 = h;
     membership_tests (test, h3);
   }
 
+  std::cout << "4" << std::flush;
   {
     H h4;
     h4.insert (vals.begin (), vals.end ());
+    std::cout << "." << std::flush;
     assert (h4 == h);
   }
 
+  std::cout << "5" << std::flush;
   {
     H h5;
     h5.insert (vals.rbegin (), vals.rend ());
+    std::cout << "." << std::flush;
     assert (h5 == h);
   }
 }
@@ -235,22 +250,50 @@ template <int N>
 void
 testsuite ()
 {
-  std::cout << "running testsuite for N=" << N << std::endl;
+  std::cout << "running testsuite for N=" << N << std::flush;
 
+  std::cout << std::endl << " + std::map int->int " << std::flush;
   tests<std::map<int, int>, N> ();
+
+  std::cout << std::endl << " + hashtab int->int default hash " << std::flush;
   tests<hashtab<int, int, N>> ();
+
+  std::cout << std::endl << " + hashtab int->int, hash2 " << std::flush;
   tests<hashtab<int, int, N, hash_int2>> ();
+
+  std::cout << std::endl << " + hashtab int->int, hash3, full " << std::flush;
   tests<hashtab<int, int, N, hash_int3>, N - 1> ();
+
+  std::cout << std::endl << " + hashtab int->int, silly hash " << std::flush;
   tests<hashtab<int, int, N, silly_hash<int> >> ();
 
+  std::cout << std::endl << " + hashtab string->string default hash " << std::flush;
   tests<hashtab<std::string, std::string, N>> ();
+
+  std::cout << std::endl << " + hashtab string->string other hash " << std::flush;
   tests<hashtab<std::string, std::string, N, hash_string>> ();
+
+  std::cout << std::endl << " + hashtab string->string silly hash " << std::flush;
   tests<hashtab<std::string, std::string, N, silly_hash<std::string> > > ();
+
+  std::cout << std::endl;
 }
 
 int
 main (int argc, char *argv[])
 {
+  std::cout << "tests for tiny tables" << std::endl;
+  tests<hashtab<int, int, 1>, 0> ();
+  tests<hashtab<std::string, std::string, 1>, 0> ();
+
+  tests<hashtab<int, int, 2>, 1> ();
+  tests<hashtab<std::string, std::string, 2>, 1> ();
+
+  tests<hashtab<int, int, 3>, 2> ();
+  tests<hashtab<std::string, std::string, 3>, 2> ();
+
+  testsuite<5> ();
+  testsuite<17> ();
   testsuite<31> ();
   testsuite<61> ();
   testsuite<127> ();
@@ -260,4 +303,5 @@ main (int argc, char *argv[])
   testsuite<2039> ();
   testsuite<4093> ();
   testsuite<8191> ();
+  testsuite<65521> ();
 }
