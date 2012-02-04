@@ -415,6 +415,12 @@ public:
     return _size;
   }
 
+  void
+  clear ()
+  {
+    *this = hashtab ();
+  }
+
   iterator
   begin ()
   {
