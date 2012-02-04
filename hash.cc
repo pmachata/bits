@@ -169,34 +169,66 @@ tests ()
   H h;
   assert (h == h);
 
+  std::vector<std::pair<typename H::key_type, typename H::mapped_type> > vals;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
-      auto p = h.insert (std::make_pair (*i, *i));
+      auto pair = std::make_pair (*i, *i);
+      vals.push_back (pair);
+      auto p = h.insert (pair);
       assert (p.first != h.end ());
       assert (p.second);
     }
   assert (h == h);
+  assert (h.begin () != h.end ());
+  assert (h.begin () == h.begin ());
+  assert (h.end () == h.end ());
 
-  auto h2 = h;
-  assert (h2 == h);
+  {
+    typename H::iterator it = h.begin ();
+    typename H::iterator jt = it;
+    assert (it == jt);
+    ++it;
+    ++jt;
+    assert (it == jt);
+  }
 
-  membership_tests (test, h);
-  dummy_insert_test (test, h);
-  assert (h2 == h);
+  {
+    auto h2 = h;
+    assert (h2 == h);
 
-  membership_tests (test, h2);
-  dummy_insert_test (test, h2);
-  swap (h, h2);
-  assert (h2 == h);
+    membership_tests (test, h);
+    dummy_insert_test (test, h);
+    assert (h2 == h);
 
-  swap (h, h);
-  assert (h2 == h);
+    membership_tests (test, h2);
+    dummy_insert_test (test, h2);
+    swap (h, h2);
+    assert (h2 == h);
 
-  h2.insert (std::make_pair (test.extra (), test.extra ()));
-  assert (h2 != h);
+    swap (h, h);
+    assert (h2 == h);
 
-  H const &h3 = h;
-  membership_tests (test, h3);
+    h2.insert (std::make_pair (test.extra (), test.extra ()));
+    assert (h2 != h);
+    assert (!(h2 == h));
+  }
+
+  {
+    H const &h3 = h;
+    membership_tests (test, h3);
+  }
+
+  {
+    H h4;
+    h4.insert (vals.begin (), vals.end ());
+    assert (h4 == h);
+  }
+
+  {
+    H h5;
+    h5.insert (vals.rbegin (), vals.rend ());
+    assert (h5 == h);
+  }
 }
 
 template <int N>
