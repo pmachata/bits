@@ -30,7 +30,9 @@
 #include <bitset>
 #include <utility>
 #include <functional>
+#include <type_traits>
 
+// N.B. This might not be suitable for huge tables.
 struct default_secondary_hash
 {
   typedef size_t result_type;
@@ -42,9 +44,28 @@ struct default_secondary_hash
   }
 };
 
+// We use this as secondary hash for all small tables (the exact value
+// of small is defined in the hashtab template).  The reason is that
+// for small tables, the default secondary hash would easily wrap
+// around and get back to the original position, and the insertion
+// would end in a loop.  Iterative enumeration of all available
+// positions is well affordable for small tables.
+struct trivial_secondary_hash
+{
+  typedef size_t result_type;
+  typedef size_t argument_type;
+  size_t
+  operator () (size_t v) const
+  {
+    return 1;
+  }
+};
+
 template <class Key, class T, size_t N,
 	  class Hash1 = std::hash<Key>,
-	  class Hash2 = default_secondary_hash,
+	  class Hash2 = typename std::conditional<(N > 100),
+						  default_secondary_hash,
+						  trivial_secondary_hash>::type,
 	  class Equal = std::equal_to<Key>>
 struct hashtab
 {
