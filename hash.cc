@@ -287,16 +287,21 @@ testsuite ()
 int
 main (int argc, char *argv[])
 {
-  std::cout << "tests for tiny tables" << std::endl;
+  std::cout << "tests for tiny tables" << std::flush;
+
+  std::cout << std::endl << " + hashtab N=1 " << std::flush;
   tests<hashtab<int, int, 1>, 0> ();
   tests<hashtab<std::string, std::string, 1>, 0> ();
 
+  std::cout << std::endl << " + hashtab N=2 " << std::flush;
   tests<hashtab<int, int, 2>, 1> ();
   tests<hashtab<std::string, std::string, 2>, 1> ();
 
+  std::cout << std::endl << " + hashtab N=3 " << std::flush;
   tests<hashtab<int, int, 3>, 2> ();
   tests<hashtab<std::string, std::string, 3>, 2> ();
 
+  std::cout << std::endl;
   testsuite<5> ();
   testsuite<17> ();
   testsuite<31> ();
