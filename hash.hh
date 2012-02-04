@@ -307,13 +307,12 @@ private:
   }
 
   bool
-  contains_all (hashtab const &other) const
+  contains_all (hashtab const &other, bool just_keys) const
   {
-    for (const_iterator it = begin (); it != end (); ++it)
+    for (const_iterator it = other.begin (); it != other.end (); ++it)
       {
-	const_iterator jt = other.find (it->first);
-	if (jt == other.end ()
-	    || jt->second != it->second)
+	const_iterator jt = find (it->first);
+	if (jt == end () || (!just_keys && jt->second != it->second))
 	  return false;
       }
     return true;
@@ -346,8 +345,11 @@ public:
     // presence.  Since find is amortized constant time operation, the
     // cost of this comparison is 2*N.  The advantage is that this
     // will keep working when (if) deletion is implemented.
-
-    return contains_all (other) && other.contains_all (*this);
+    //
+    // First check whether all THIS keys are in OTHER, next check the
+    // other way around and also check that values are equal.
+    return (contains_all (other, true)
+	    && other.contains_all (*this, false));
   }
 
   bool
