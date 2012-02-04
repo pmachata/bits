@@ -321,7 +321,7 @@ private:
 
 public:
   bool
-  operator == (hashtab other) const
+  operator == (hashtab const &other) const
   {
     if (_size != other._size)
       return false;
@@ -351,7 +351,7 @@ public:
   }
 
   bool
-  operator != (hashtab other) const
+  operator != (hashtab const &other) const
   {
     return !(*this == other);
   }
