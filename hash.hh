@@ -88,16 +88,6 @@ private:
     return const_iterator (this, pos);
   }
 
-  bool
-  equal_slots (hashtab const &other) const
-  {
-    // N.B. at this point we already know that _taken == other._taken
-    for (size_type i = 0; i < N; ++i)
-      if (_taken[i] && _table[i] != other._table[i])
-	return false;
-    return true;
-  }
-
   template<class This, class Hashtab>
   class iterator_builder
   {
@@ -114,7 +104,7 @@ private:
       : _parent (parent)
       , _pos (0)
     {
-      find_next (parent);
+      find_next ();
     }
 
     inline bool
@@ -124,19 +114,19 @@ private:
     }
 
     inline void
-    find_next (hashtab const *parent)
+    find_next ()
     {
-	for (; valid () && !parent->_taken[_pos]; ++_pos)
+	for (; valid () && !_parent->_taken[_pos]; ++_pos)
 	  ;
     }
 
     inline void
-    shift (hashtab const *parent)
+    shift ()
     {
       if (valid ())
 	{
 	  ++_pos;
-	  find_next (parent);
+	  find_next ();
 	}
     }
 
@@ -180,7 +170,7 @@ private:
     This &
     operator ++ ()
     {
-      this->shift (_parent);
+      this->shift ();
       return *(This *)this;
     }
 
@@ -282,20 +272,61 @@ public:
     return *this;
   }
 
+private:
+  // We have to ignore what's in the unused (and uninitialized)
+  // portions of the table.
+  bool
+  equal_slots (hashtab const &other) const
+  {
+    // N.B. at this point we already know that _taken == other._taken
+    for (size_type i = 0; i < N; ++i)
+      if (_taken[i] && _table[i] != other._table[i])
+	return false;
+    return true;
+  }
+
+  bool
+  contains_all (hashtab const &other) const
+  {
+    for (const_iterator it = begin (); it != end (); ++it)
+      {
+	const_iterator jt = other.find (it->first);
+	if (jt == other.end ()
+	    || jt->second != it->second)
+	  return false;
+      }
+    return true;
+  }
+
+public:
   bool
   operator == (hashtab other) const
   {
-    // N.B. We have to ignore what's in the unused (and uninitialized)
-    // portions of the table.
-    //
-    // When (if) deleting is implemented, this will become even
-    // trickier as we will most probably want to render equal any two
-    // tables that hold the same elements, regardless of deletion
-    // sentinels.
+    if (_size != other._size)
+      return false;
 
-    return _size == other._size
-      && _taken == other._taken
-      && equal_slots (other);
+    // This may fail even if the tables are equal, but it might work,
+    // and if it does, we can avoid the following (expensive) check.
+    if (_taken == other._taken && equal_slots (other))
+      return true;
+
+    // The original idea was to use the same algorithm that
+    // unordered_map uses, viz iterating "buckets" with local
+    // iterators and testing whether is_permutation holds between this
+    // chain and the one that's in OTHER.  But the fact that chain
+    // that starts at position 1 contains positions [1, 3, 5, 7]
+    // doesn't imply that the chain that starts at 3 contains
+    // positions [3, 5, 7].  The increment is determined by the
+    // secondary hash (due Sedgewick).  So in effect, we have N
+    // independent chains, and checking all those is clearly a waste
+    // of cycles.
+    //
+    // So instead we just manually go through keys and check their
+    // presence.  Since find is amortized constant time operation, the
+    // cost of this comparison is 2*N.  The advantage is that this
+    // will keep working when (if) deletion is implemented.
+
+    return contains_all (other) && other.contains_all (*this);
   }
 
   bool
@@ -362,7 +393,7 @@ public:
   const_iterator
   cbegin () const
   {
-    return const_iterator (this);
+    return begin ();
   }
 
   iterator
@@ -380,7 +411,7 @@ public:
   const_iterator
   cend () const
   {
-    return const_iterator (this, N);
+    return end ();
   }
 };
 
