@@ -20,8 +20,13 @@ tests ()
   for (size_t loops = 0; ; ++loops)
     {
       std::cout << loops << std::flush;
+      assert (h.empty ());
       for (auto i = vals.begin (); i != vals.end (); ++i)
-	h.push_front (*i);
+	{
+	  h.push_front (*i);
+	  assert (h.front () == *i);
+	  assert (!h.empty ());
+	}
 
       std::cout << "." << std::flush;
       assert ((size_t)std::distance (h.begin (), h.end ()) == test.size ());
