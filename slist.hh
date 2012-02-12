@@ -257,6 +257,30 @@ public:
     swap (empty);
   }
 
+  void
+  resize (size_t n, T const &value = T ())
+  {
+    if (n == 0)
+      {
+	clear ();
+	return;
+      }
+
+    iterator it = begin ();
+    iterator jt = it;
+    size_t i = 0;
+    for (; i < n - 1; ++i)
+      if (it == end ())
+	break;
+      else
+	jt = it++;
+    if (it != end ())
+      erase_after (it, end ());
+    else
+      for (; i < n; ++i)
+	insert_after (jt, value);
+  }
+
 private:
   void
   check_space () const

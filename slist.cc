@@ -89,6 +89,25 @@ tests ()
       }
 
       std::cout << "2" << std::flush;
+      {
+	enum { K = M / 2 };
+	H h2 = h;
+	h2.resize (K);
+	assert (std::distance (h2.begin (), h2.end ()) == K);
+
+	auto jt = vals.rbegin ();
+	for (auto it = h2.begin (); it != h2.end (); )
+	  assert (*it++ == *jt++);
+
+	enum { L = M * 2 / 3 };
+	h2.resize (L, test.extra ());
+	assert (std::distance (h2.begin (), h2.end ()) == L);
+	auto it = h2.begin ();
+	std::advance (it, K);
+	for (size_t i = K; i < L; ++i)
+	  assert (*it++ == test.extra ());
+      }
+
       if (M > 1)
 	{
 	  std::cout << "." << std::flush;
