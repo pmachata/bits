@@ -296,6 +296,15 @@ public:
   }
 
   void
+  insert_after (const_iterator it, const T &value)
+  {
+    assert (it._pos < N);
+    index_type i = take_slot (value);
+    _nexts[i] = _nexts[it._pos];
+    _nexts[it._pos] = i;
+  }
+
+  void
   pop_front ()
   {
     index_type i = _head;

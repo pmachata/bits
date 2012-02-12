@@ -88,6 +88,18 @@ tests ()
 	delete h2;
       }
 
+      std::cout << "2" << std::flush;
+      if (M > 1)
+	{
+	  std::cout << "." << std::flush;
+	  H h2;
+	  h2.push_front (vals.front ());
+	  h2.insert_after (h2.begin (), test.extra ());
+	  auto it = h2.begin ();
+	  assert (*it++ == vals.front ());
+	  assert (*it++ == test.extra ());
+	}
+
       switch (loops)
 	{
 	case 0:
