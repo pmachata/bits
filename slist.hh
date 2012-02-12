@@ -21,11 +21,10 @@
 #ifndef _SLIST_H_
 #define _SLIST_H_
 
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <memory>
-#include <iostream>
+#include <cinttypes>
 
 template<class T, size_t N>
 class slist
@@ -46,15 +45,11 @@ protected:
 
   struct slot
   {
-    union
-    {
-      unsigned char bytes[sizeof (T)]; // payload
-      T object;
-    };
+    unsigned char bytes[sizeof (T)]; // payload
   };
 
-  std::array<slot, N> _slots;
-  std::array<index_type, N> _nexts;
+  slot _slots[N];
+  index_type _nexts[N];
   index_type _head;
   index_type _free;
 
@@ -131,7 +126,8 @@ public:
     reference
     operator * ()
     {
-      return this->_parent->_slots[this->_pos].object;
+      unsigned char *bytes = this->_parent->_slots[this->_pos].bytes;
+      return *reinterpret_cast<pointer> (bytes);
     }
   };
 
@@ -161,7 +157,8 @@ public:
     const_reference
     operator * ()
     {
-      return this->_parent->_slots[this->_pos].object;
+      unsigned char const *bytes = this->_parent->_slots[this->_pos].bytes;
+      return *reinterpret_cast<const_pointer> (bytes);
     }
   };
 
@@ -254,7 +251,9 @@ private:
   void
   return_slot (index_type i)
   {
-    _slots[i].object.~T ();
+    unsigned char *bytes = _slots[i].bytes;
+    T &object = *reinterpret_cast<pointer> (bytes);
+    object.~T ();
     _nexts[i] = _free;
     _free = i;
   }
