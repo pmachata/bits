@@ -372,6 +372,12 @@ public:
     return _head == N;
   }
 
+  size_type
+  max_size () const
+  {
+    return N;
+  }
+
   iterator
   begin ()
   {
