@@ -329,6 +329,12 @@ public:
     return *begin ();
   }
 
+  bool
+  empty () const
+  {
+    return _head == N;
+  }
+
   iterator
   begin ()
   {
