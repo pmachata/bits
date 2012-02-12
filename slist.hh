@@ -221,6 +221,13 @@ public:
       }
   }
 
+  slist (size_t n, T const &value = T ())
+  {
+    init ();
+    for (size_t i = 0; i < n; ++i)
+      push_front (value);
+  }
+
   ~slist ()
   {
     for (auto it = begin (); it != end (); ++it)
