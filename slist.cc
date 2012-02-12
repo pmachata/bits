@@ -111,9 +111,23 @@ tests ()
 	  continue;
 	};
 
+      std::cout << "X" << std::flush;
       break;
     }
 }
+
+struct C
+{
+  // this is for testing that empty slist doesn't contain objects
+  C () { assert (false); }
+};
+
+struct D
+{
+  int &i;
+  D (int &ii) : i (ii) {}
+  ~D () { i++; }
+};
 
 template <int N>
 void
@@ -126,6 +140,26 @@ testsuite ()
 
   std::cout << std::endl << " + slist int " << std::flush;
   tests<slist<int, N>> ();
+
+  std::cout << std::endl << " + slist std::string " << std::flush;
+  tests<slist<std::string, N>> ();
+
+  std::cout << std::endl << " + object store tests " << std::flush;
+  {
+    slist<C, N> slist;
+  }
+  {
+    int ct = 0;
+    {
+      slist<D, N> slist;
+      {
+	D d (ct);
+	slist.push_front (d);
+      }
+      assert (ct == 1); // "D d" destroyed
+    }
+    assert (ct == 2); // the copy internal to slist destroyed
+  }
 
   std::cout << std::endl;
 }
