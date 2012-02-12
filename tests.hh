@@ -49,16 +49,19 @@ struct TestVector<N, std::string>
   TestVector ()
   {
     int c = ' ';
-    for (int i = 0; i < N; ++i)
+    size_t len = ::slen<N>::value;
+    while (size () < N)
       {
 	if (std::find (begin (), end (), key) == end ())
 	  push_back (key);
+	else
+	  len++;
 
 	c = (c + 17) % 127;
 	if (c < ' ')
 	  c += ' ';
 	key += char (c);
-	if (key.size () > ::slen<N>::value)
+	if (key.size () > len)
 	  key = key.substr (1, key.size ());
       }
   }
