@@ -129,6 +129,12 @@ public:
       unsigned char *bytes = this->_parent->_slots[this->_pos].bytes;
       return *reinterpret_cast<pointer> (bytes);
     }
+
+    pointer
+    operator -> ()
+    {
+      return &**this;
+    }
   };
 
   class const_iterator
@@ -159,6 +165,12 @@ public:
     {
       unsigned char const *bytes = this->_parent->_slots[this->_pos].bytes;
       return *reinterpret_cast<const_pointer> (bytes);
+    }
+
+    const_pointer
+    operator -> ()
+    {
+      return &**this;
     }
   };
 
