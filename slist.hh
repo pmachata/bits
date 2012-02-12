@@ -204,6 +204,12 @@ public:
     init ();
   }
 
+  slist (slist const &copy)
+    : _head (N)
+  {
+    *this = slist (copy.begin (), copy.end ());
+  }
+
   template <class InputIterator>
   slist (InputIterator first, InputIterator last)
   {
@@ -216,6 +222,12 @@ public:
 	_head = 0;
 	_nexts[tail] = N;
       }
+  }
+
+  ~slist ()
+  {
+    for (auto it = begin (); it != end (); ++it)
+      it->~T ();
   }
 
   void
