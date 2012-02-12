@@ -64,6 +64,30 @@ tests ()
 	  assert (std::distance (h2.begin (), h2.end ()) == 1);
       }
 
+      {
+	H *h2 = new H (h);
+	for (size_t i = 1; i < M; ++i)
+	  {
+	    if (i % 1000 == 0)
+	      std::cout << "." << std::flush;
+	    std::vector<typename H::value_type> save;
+	    for (size_t j = 0; j < i; ++j)
+	      {
+		assert (!h2->empty ());
+		typename H::value_type v = h2->front ();
+		save.push_back (v);
+		h2->pop_front ();
+	      }
+	    while (!save.empty ())
+	      {
+		h2->push_front (save.back ());
+		save.pop_back ();
+	      }
+	    assert (*h2 == h);
+	  }
+	delete h2;
+      }
+
       switch (loops)
 	{
 	case 0:
