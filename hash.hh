@@ -258,6 +258,10 @@ public:
       : Super (NULL, 0)
     {}
 
+    const_iterator (iterator const &other)
+      : Super (other._parent, other._pos)
+    {}
+
     value_type const &
     operator * ()
     {

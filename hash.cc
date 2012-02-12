@@ -147,7 +147,9 @@ tests ()
   {
     typename H::iterator it = h.begin ();
     typename H::iterator jt = it;
+    typename H::const_iterator kt = it;
     assert (it == jt);
+    assert (kt == it);
     ++it;
     ++jt;
     assert (it == jt);
