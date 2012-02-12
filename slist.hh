@@ -317,6 +317,18 @@ public:
     return iterator (this, last._pos);
   }
 
+  reference
+  front ()
+  {
+    return *begin ();
+  }
+
+  const_reference
+  front () const
+  {
+    return *begin ();
+  }
+
   iterator
   begin ()
   {
