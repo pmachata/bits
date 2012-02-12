@@ -172,14 +172,19 @@ testsuite ()
   std::cout << std::endl << " + slist int " << std::flush;
   tests<slist<int, N>> ();
 
+  std::cout << std::endl << " + full slist int " << std::flush;
+  tests<slist<int, N>, N> ();
+
   std::cout << std::endl << " + slist std::string " << std::flush;
   tests<slist<std::string, N>> ();
 
   std::cout << std::endl << " + object store tests " << std::flush;
   {
+    // test that ctor is not called for empty list
     slist<C, N> slist;
   }
   {
+    // test that dtors are called as required
     int ct = 0;
     {
       slist<D, N> slist;
@@ -190,6 +195,19 @@ testsuite ()
       assert (ct == 1); // "D d" destroyed
     }
     assert (ct == 2); // the copy internal to slist destroyed
+  }
+  {
+    // test that overfilling slist throws
+    int ok = 0;
+    try
+      {
+	tests<slist<int, N>, N + 1> ();
+      }
+    catch (std::bad_alloc const &e)
+      {
+	ok = 1;
+      }
+    assert (ok);
   }
 
   std::cout << std::endl;
