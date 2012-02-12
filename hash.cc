@@ -151,6 +151,7 @@ tests ()
     ++it;
     ++jt;
     assert (it == jt);
+    assert ((size_t)std::distance (h.begin (), h.end ()) == vals.size ());
   }
   std::cout << "2" << std::flush;
   {

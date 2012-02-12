@@ -111,6 +111,7 @@ private:
 
   template<class This, class Hashtab>
   class iterator_builder
+    : public std::iterator<std::forward_iterator_tag, value_type>
   {
   protected:
     Hashtab _parent;
