@@ -86,7 +86,11 @@ struct hashtab
 
 private:
 
-  std::array<value_type, N> _table;
+  struct slot
+  {
+    unsigned char bytes[sizeof (value_type)]; // payload
+  };
+  slot _table[N];
   std::bitset<N> _taken;
   size_type _size;
 
@@ -101,7 +105,7 @@ private:
     size_type d = _hash2 (pos);
     found = false;
     for (; _taken[pos]; pos = (pos + d) % N)
-      if (_eq (_table[pos].first, e))
+      if (_eq (tab (pos).first, e))
 	{
 	  found = true;
 	  break;
@@ -229,7 +233,7 @@ public:
     value_type &
     operator * ()
     {
-      return this->_parent->_table[this->_pos];
+      return this->_parent->tab (this->_pos);
     }
 
     value_type *
@@ -265,7 +269,7 @@ public:
     value_type const &
     operator * ()
     {
-      return this->_parent->_table[this->_pos];
+      return this->_parent->tab (this->_pos);
     }
 
     value_type const *
@@ -299,6 +303,22 @@ public:
   }
 
 private:
+  value_type const &
+  tab (size_type i) const
+  {
+    unsigned char const *bytes = _table[i].bytes;
+    value_type const &object = *reinterpret_cast<const_pointer> (bytes);
+    return object;
+  }
+
+  value_type &
+  tab (size_type i)
+  {
+    unsigned char *bytes = _table[i].bytes;
+    value_type &object = *reinterpret_cast<pointer> (bytes);
+    return object;
+  }
+
   // We have to ignore what's in the unused (and uninitialized)
   // portions of the table.
   bool
@@ -306,7 +326,7 @@ private:
   {
     // N.B. at this point we already know that _taken == other._taken
     for (size_type i = 0; i < N; ++i)
-      if (_taken[i] && _table[i] != other._table[i])
+      if (_taken[i] && tab (i) != other.tab (i))
 	return false;
     return true;
   }
@@ -378,7 +398,7 @@ public:
       return std::make_pair (iterator (this, it._pos), false);
 
     _taken[it._pos] = true;
-    _table[it._pos] = emt;
+    new (&_table[it._pos]) value_type (emt);
     ++_size;
 
     return std::make_pair (iterator (this, it._pos), true);

@@ -242,6 +242,14 @@ testsuite ()
   std::cout << std::endl;
 }
 
+struct D
+{
+  D ()
+  {
+    assert (!"This ctor should never be called!");
+  }
+};
+
 int
 main (int argc, char *argv[])
 {
@@ -258,6 +266,10 @@ main (int argc, char *argv[])
   std::cout << std::endl << " + hashtab N=3 " << std::flush;
   tests<hashtab<int, int, 3>, 2> ();
   tests<hashtab<std::string, std::string, 3>, 2> ();
+
+  {
+    hashtab<int, D, 3> _;
+  }
 
   std::cout << std::endl;
   testsuite<5> ();
