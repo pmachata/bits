@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <memory>
 #include <cinttypes>
+#include <iostream>
 
 template<class T, size_t N>
 class slist

@@ -1,5 +1,5 @@
 /*
- * Test suite for fixed-size double-hashing hash table.
+ * Test suite for associative container on top of std::vector.
  *
  * Copyright (C) 2012 Petr Machata
  *
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hash.hh"
+#include "assoc_vec.hh"
 #include "tests.hh"
 
 #include <vector>
@@ -26,61 +26,6 @@
 #include <cassert>
 #include <iostream>
 
-template <class Key>
-struct silly_hash
-{
-  typedef size_t result_type;
-  typedef Key const &argument_type;
-  size_t
-  operator () (Key const &i) const
-  {
-    return 0;
-  }
-};
-
-struct hash_int2
-{
-  typedef size_t result_type;
-  typedef int argument_type;
-  size_t
-  operator () (int i) const
-  {
-    return i * 2654435761;
-  }
-};
-
-struct hash_int3
-{
-  typedef size_t result_type;
-  typedef int argument_type;
-  size_t
-  operator () (int i) const
-  {
-    int a = i;
-    a = (a+0x7ed55d16) + (a<<12);
-    a = (a^0xc761c23c) ^ (a>>19);
-    a = (a+0x165667b1) + (a<<5);
-    a = (a+0xd3a2646c) ^ (a<<9);
-    a = (a+0xfd7046c5) + (a<<3);
-    a = (a^0xb55a4f09) ^ (a>>16);
-    return a;
-  }
-};
-
-struct hash_string
-{
-  typedef size_t result_type;
-  typedef std::string const &argument_type;
-  size_t
-  operator () (std::string const &str) const
-  {
-    unsigned long h = 5381;
-    for (auto it = str.begin (); it != str.end (); ++it)
-      h = h * 33 ^ *it;
-    return h;
-  }
-};
-
 template <class T, class U>
 void
 dummy_insert_test (T const &test, U &h)
@@ -88,29 +33,9 @@ dummy_insert_test (T const &test, U &h)
   std::cout << "." << std::flush;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
-      // insert a different element
-      {
-	auto p = h.insert (std::make_pair (*i, *i + *i));
-	assert (p.first != h.end ());
-	assert (!p.second);
-	assert (p.first->second == *i + *i);
-      }
-
-      // re-insert the original
-      {
-	auto p = h.insert (std::make_pair (*i, *i));
-	assert (p.first != h.end ());
-	assert (!p.second);
-	assert (p.first->second == *i);
-      }
-
-      // re-insert the original again
-      {
-	auto p = h.insert (std::make_pair (*i, *i));
-	assert (p.first != h.end ());
-	assert (!p.second);
-	assert (p.first->second == *i);
-      }
+      auto p = h.insert (std::make_pair (*i, *i));
+      assert (p.first != h.end ());
+      assert (!p.second);
     }
 }
 
@@ -234,26 +159,11 @@ testsuite ()
   std::cout << std::endl << " + std::map int->int " << std::flush;
   tests<std::map<int, int>, N> ();
 
-  std::cout << std::endl << " + hashtab int->int default hash " << std::flush;
-  tests<hashtab<int, int, N>> ();
+  std::cout << std::endl << " + assoc_vec int->int " << std::flush;
+  tests<assoc_vec<int, int>, N> ();
 
-  std::cout << std::endl << " + hashtab int->int, hash2 " << std::flush;
-  tests<hashtab<int, int, N, hash_int2>> ();
-
-  std::cout << std::endl << " + hashtab int->int, hash3, full " << std::flush;
-  tests<hashtab<int, int, N, hash_int3>, N - 1> ();
-
-  std::cout << std::endl << " + hashtab int->int, silly hash " << std::flush;
-  tests<hashtab<int, int, N, silly_hash<int> >> ();
-
-  std::cout << std::endl << " + hashtab string->string default hash " << std::flush;
-  tests<hashtab<std::string, std::string, N>> ();
-
-  std::cout << std::endl << " + hashtab string->string other hash " << std::flush;
-  tests<hashtab<std::string, std::string, N, hash_string>> ();
-
-  std::cout << std::endl << " + hashtab string->string silly hash " << std::flush;
-  tests<hashtab<std::string, std::string, N, silly_hash<std::string> > > ();
+  std::cout << std::endl << " + assoc_vec string->string " << std::flush;
+  tests<assoc_vec<std::string, std::string>, N> ();
 
   std::cout << std::endl;
 }
@@ -263,17 +173,17 @@ main (int argc, char *argv[])
 {
   std::cout << "tests for tiny tables" << std::flush;
 
-  std::cout << std::endl << " + hashtab N=1 " << std::flush;
-  tests<hashtab<int, int, 1>, 0> ();
-  tests<hashtab<std::string, std::string, 1>, 0> ();
+  std::cout << std::endl << " + assoc_vec N=0 " << std::flush;
+  tests<assoc_vec<int, int>, 0> ();
+  tests<assoc_vec<std::string, std::string>, 0> ();
 
-  std::cout << std::endl << " + hashtab N=2 " << std::flush;
-  tests<hashtab<int, int, 2>, 1> ();
-  tests<hashtab<std::string, std::string, 2>, 1> ();
+  std::cout << std::endl << " + assoc_vec N=1 " << std::flush;
+  tests<assoc_vec<int, int>, 1> ();
+  tests<assoc_vec<std::string, std::string>, 1> ();
 
-  std::cout << std::endl << " + hashtab N=3 " << std::flush;
-  tests<hashtab<int, int, 3>, 2> ();
-  tests<hashtab<std::string, std::string, 3>, 2> ();
+  std::cout << std::endl << " + assoc_vec N=2 " << std::flush;
+  tests<assoc_vec<int, int>, 2> ();
+  tests<assoc_vec<std::string, std::string>, 2> ();
 
   std::cout << std::endl;
   testsuite<5> ();

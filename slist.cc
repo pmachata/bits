@@ -1,4 +1,5 @@
 #include "slist.hh"
+#include "forward_vec.hh"
 #include "tests.hh"
 
 #include <iostream>
@@ -6,10 +7,14 @@
 #include <forward_list>
 #include <cassert>
 
-template <class H, int M = std::tuple_size<H>::value - 1>
+template <class H, int M>
 void
-tests ()
+tests (char const *msg = "")
 {
+  std::cout << std::endl << " + " << typeid (H).name ()
+	    << " " << typeid (typename H::value_type).name ()
+	    << msg << "\t" << std::flush;
+
   H h;
   assert (h == h);
   assert (h.begin () == h.end ());
@@ -155,9 +160,68 @@ struct C
 
 struct D
 {
-  int &i;
-  D (int &ii) : i (ii) {}
-  ~D () { i++; }
+  int *i;
+  D (int *ii) : i (ii) {}
+  D (D const &other) : i (other.i) {}
+  ~D () { ++*i; }
+};
+
+template <template <class, int> class Ct, int N>
+void
+custom_testsuite ()
+{
+  tests<typename Ct<int, N>::type, N - 1> ();
+  tests<typename Ct<int, N>::type, N> (": full");
+  tests<typename Ct<std::string, N>::type, N - 1> ();
+
+  std::cout << std::endl << " + object store tests " << std::flush;
+  {
+    // test that ctor is not called for empty list
+    typename Ct<C, N>::type slist;
+  }
+  {
+    // test that dtors are called as required
+    int ct = 0;
+    {
+      typename Ct<D, N>::type slist;
+      {
+	D d (&ct);
+	slist.push_front (d);
+      }
+      assert (ct == 1); // "D d" destroyed
+    }
+    assert (ct == 2); // the copy internal to slist destroyed
+  }
+  std::cout << std::endl;
+}
+
+template <template <class, int> class Ct, int N>
+void
+test_overfill ()
+{
+  // test that overfilling slist throws
+  int ok = 0;
+  try
+    {
+      tests<typename Ct<int, N>::type, N + 1> ();
+    }
+  catch (std::bad_alloc const &e)
+    {
+      ok = 1;
+    }
+  assert (ok);
+}
+
+template <class T, int N>
+struct slistC
+{
+  typedef slist<T, N> type;
+};
+
+template <class T, int N>
+struct fwdvecC
+{
+  typedef forward_vec<T> type;
 };
 
 template <int N>
@@ -165,52 +229,10 @@ void
 testsuite ()
 {
   std::cout << "running testsuite for N=" << N << std::flush;
-
-  std::cout << std::endl << " + std::forward_list int " << std::flush;
   tests<std::forward_list<int>, N - 1> ();
-
-  std::cout << std::endl << " + slist int " << std::flush;
-  tests<slist<int, N>> ();
-
-  std::cout << std::endl << " + full slist int " << std::flush;
-  tests<slist<int, N>, N> ();
-
-  std::cout << std::endl << " + slist std::string " << std::flush;
-  tests<slist<std::string, N>> ();
-
-  std::cout << std::endl << " + object store tests " << std::flush;
-  {
-    // test that ctor is not called for empty list
-    slist<C, N> slist;
-  }
-  {
-    // test that dtors are called as required
-    int ct = 0;
-    {
-      slist<D, N> slist;
-      {
-	D d (ct);
-	slist.push_front (d);
-      }
-      assert (ct == 1); // "D d" destroyed
-    }
-    assert (ct == 2); // the copy internal to slist destroyed
-  }
-  {
-    // test that overfilling slist throws
-    int ok = 0;
-    try
-      {
-	tests<slist<int, N>, N + 1> ();
-      }
-    catch (std::bad_alloc const &e)
-      {
-	ok = 1;
-      }
-    assert (ok);
-  }
-
-  std::cout << std::endl;
+  custom_testsuite<slistC, N> ();
+  test_overfill<slistC, N> ();
+  custom_testsuite<fwdvecC, N> ();
 }
 
 int
@@ -229,10 +251,28 @@ main(int argc, char *argv[])
     }
   else
     {
-      slist<int, 10> x;
-      x.push_front (1);
-      x.push_front (2);
-      std::cout << std::distance (x.begin (), x.end ()) << std::endl;
+      enum { N = 110, M = N - 1 };
+      typedef slist<std::string, N> H;
+      TestVector<M, typename H::value_type> v;
+      std::cout << std::distance (v.begin (), v.end ()) << std::endl;
+      H h (v.begin (), v.end ());
+      H *h2 = new H (h);
+      size_t i = M;
+      std::vector<typename H::value_type> save;
+      for (size_t j = 0; j < i; ++j)
+	{
+	  assert (!h2->empty ());
+	  typename H::value_type v = h2->front ();
+	  save.push_back (v);
+	  h2->pop_front ();
+	}
+      while (!save.empty ())
+	{
+	  h2->push_front (save.back ());
+	  save.pop_back ();
+	}
+      assert (*h2 == h);
+      delete h2;
     }
   return 0;
 }
