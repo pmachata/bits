@@ -28,23 +28,9 @@ template<class Key, class T,
 	 class Compare = std::less<Key>,
 	 class Allocator = std::allocator<std::pair<Key, T> > >
 class assoc_vec
-  : private std::vector<std::pair<Key, T>, Allocator>
 {
-  typedef std::vector<std::pair<Key, T>, Allocator> Super;
-  bool _sorted;
-
-  bool
-  subset (assoc_vec const &other) const
-  {
-    for (auto it = begin (); it != end (); ++it)
-      {
-	auto jt = other.find (it->first);
-	if (jt == other.end ()
-	    || jt->second != it->second)
-	  return false;
-      }
-    return true;
-  }
+  typedef std::vector<std::pair<Key, T>, Allocator> Vec;
+  mutable Vec _vec;
 
 public:
   typedef Key key_type;
@@ -55,16 +41,38 @@ public:
   typedef value_type *pointer;
   typedef value_type const *const_pointer;
 
-  using typename Super::iterator;
-  using typename Super::const_iterator;
-  using typename Super::size_type;
-  using Super::size;
-  using Super::clear;
+  typedef typename Vec::iterator iterator;
+  typedef typename Vec::const_iterator const_iterator;
+  typedef typename Vec::size_type size_type;
+
+  size_type
+  size () const
+  {
+    return _vec.size ();
+  }
+
+  void
+  clear ()
+  {
+    _vec.clear ();
+  }
+
+  assoc_vec ()
+  {}
+
+  assoc_vec (assoc_vec const &other)
+    : _vec (other._vec)
+  {}
+
+  template <class Iterator>
+  assoc_vec (Iterator begin, Iterator end)
+    : _vec (begin, end)
+  {}
 
   bool
   operator == (assoc_vec const &other) const
   {
-    return subset (other) && other.subset (*this);
+    return _vec == other._vec;
   }
 
   bool
@@ -73,84 +81,94 @@ public:
     return !(other == *this);
   }
 
-  typename Super::iterator
+  iterator
   begin ()
   {
-    return Super::begin ();
+    return _vec.begin ();
   }
 
-  typename Super::iterator
+  iterator
   end ()
   {
-    return Super::end ();
+    return _vec.end ();
   }
 
-  typename Super::const_iterator
+  const_iterator
   begin () const
   {
-    return Super::cbegin ();
+    return _vec.cbegin ();
   }
 
-  typename Super::const_iterator
+  const_iterator
   end () const
   {
-    return Super::cend ();
+    return _vec.cend ();
   }
 
-  typename Super::const_iterator
+  const_iterator
   cbegin () const
   {
-    return Super::cbegin ();
+    return _vec.cbegin ();
   }
 
-  typename Super::const_iterator
+  const_iterator
   cend () const
   {
-    return Super::cend ();
+    return _vec.cend ();
   }
 
 private:
   template<class Iterator>
   Iterator
-  find (Iterator b, Iterator e, key_type const &key) const
+  lbound (Iterator b, Iterator e, key_type const &key) const
   {
-    return std::find_if (b, e, [key] (value_type const &a) {
-	return a.first == key;
-      });
+    return std::lower_bound (b, e, key,
+			     [] (value_type const &a, key_type const &key)
+			     {
+			       return a.first < key;
+			     });
+  }
+
+  template<class Iterator>
+  Iterator
+  found (Iterator it, Iterator end, key_type const &key) const
+  {
+    if (it != end && it->first == key)
+      return it;
+    else
+      return end;
   }
 
 public:
-  typename Super::iterator
+  iterator
   find (key_type const &key)
   {
-    return find (begin (), end (), key);
+    return found (lbound (begin (), end (), key), end (), key);
   }
 
-  typename Super::const_iterator
+  const_iterator
   find (key_type const &key) const
   {
-    return find (cbegin (), cend (), key);
+    return found (lbound (cbegin (), cend (), key), cend (), key);
   }
 
-  std::pair<typename Super::iterator, bool>
+  std::pair<iterator, bool>
   insert (const_reference emt)
   {
-    auto it = find (emt.first);
+    auto it = lbound (begin (), end (), emt.first);
 
-    if (it == end ())
+    if (found (it, end (), emt.first) == end ())
       {
-	Super::push_back (emt);
-	return std::make_pair (begin () + (size () - 1), true);
+	size_type i = it - begin ();
+	_vec.insert (it, emt);
+	return std::make_pair (begin () + i, true);
       }
     else
-      {
-	*it = emt;
-	return std::make_pair (it, false);
-      }
+      return std::make_pair (it, false);
   }
 
-  std::pair<typename Super::iterator, bool>
-  insert (typename Super::const_iterator, const_reference emt)
+  std::pair<iterator, bool>
+  insert (const_iterator, const_reference emt)
   {
     return insert (emt);
   }
