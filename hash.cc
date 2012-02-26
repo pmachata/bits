@@ -85,7 +85,7 @@ template <class T, class U>
 void
 dummy_insert_test (T const &test, U &h)
 {
-  std::cout << "." << std::flush;
+  std::cout << "d" << std::flush;
   for (auto i = test.begin (); i != test.end (); ++i)
     {
       // insert a different element
@@ -93,23 +93,7 @@ dummy_insert_test (T const &test, U &h)
 	auto p = h.insert (std::make_pair (*i, *i + *i));
 	assert (p.first != h.end ());
 	assert (!p.second);
-	assert (p.first->second == *i + *i);
-      }
-
-      // re-insert the original
-      {
-	auto p = h.insert (std::make_pair (*i, *i));
-	assert (p.first != h.end ());
-	assert (!p.second);
-	assert (p.first->second == *i);
-      }
-
-      // re-insert the original again
-      {
-	auto p = h.insert (std::make_pair (*i, *i));
-	assert (p.first != h.end ());
-	assert (!p.second);
-	assert (p.first->second == *i);
+	assert (p.first->second == *i);  // Nothing has changed
       }
     }
 }

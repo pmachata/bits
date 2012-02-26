@@ -372,6 +372,8 @@ public:
 
     bool found;
     const_iterator it = find_slot (emt.first, found);
+    // N.B. """Inserts t if and only if there is no element in the
+    // container with key equivalent to the key of t."""
     if (found)
       return std::make_pair (iterator (this, it._pos), false);
 
