@@ -154,9 +154,12 @@ tests ()
     typename H::const_iterator kt = it;
     assert (it == jt);
     assert (kt == it);
-    ++it;
-    ++jt;
-    assert (it == jt);
+    if (it != h.end ())
+      {
+	++it;
+	++jt;
+	assert (it == jt);
+      }
     assert ((size_t)std::distance (h.begin (), h.end ()) == vals.size ());
   }
   std::cout << "2" << std::flush;
