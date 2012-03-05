@@ -250,6 +250,19 @@ struct D
   }
 };
 
+struct DD
+{
+  int *_i;
+  DD (int *i)
+    : _i (i)
+  {}
+
+  ~DD ()
+  {
+    ++*_i;
+  }
+};
+
 int
 main (int argc, char *argv[])
 {
@@ -267,8 +280,18 @@ main (int argc, char *argv[])
   tests<hashtab<int, int, 3>, 2> ();
   tests<hashtab<std::string, std::string, 3>, 2> ();
 
+  std::cout << std::endl << " + object store tests " << std::flush;
   {
     hashtab<int, D, 3> _;
+  }
+
+  {
+    int i;
+    {
+      hashtab<int, DD, 3> _ = {{0, DD (&i)}};
+      i = 0;
+    }
+    assert (i == 1);
   }
 
   std::cout << std::endl;

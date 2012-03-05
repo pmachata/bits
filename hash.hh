@@ -31,6 +31,7 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+#include <algorithm>
 
 // N.B. This might not be suitable for huge tables.
 struct default_secondary_hash
@@ -279,9 +280,53 @@ public:
     }
   };
 
-  hashtab ()
+  hashtab (Hash1 const &hash1 = Hash1 (),
+	   Hash2 const &hash2 = Hash2 (),
+	   Equal const &equal = Equal ())
     : _size (0)
+    , _hash1 (hash1)
+    , _hash2 (hash2)
+    , _eq (equal)
   {}
+
+  hashtab (hashtab const &copy)
+    : _size (0)
+    , _hash1 (copy._hash1)
+    , _hash2 (copy._hash2)
+    , _eq (copy._eq)
+  {
+    std::copy (copy.begin (), copy.end (), std::inserter (*this, end ()));
+  }
+
+  hashtab (std::initializer_list<value_type> init,
+	   Hash1 const &hash1 = Hash1 (),
+	   Hash2 const &hash2 = Hash2 (),
+	   Equal const &equal = Equal ())
+    : _size (0)
+    , _hash1 (hash1)
+    , _hash2 (hash2)
+    , _eq (equal)
+  {
+    std::copy (init.begin (), init.end (), std::inserter (*this, end ()));
+  }
+
+  template <class InputIterator>
+  hashtab (InputIterator first, InputIterator last,
+	   Hash1 const &hash1 = Hash1 (),
+	   Hash2 const &hash2 = Hash2 (),
+	   Equal const &equal = Equal ())
+    : _size (0)
+    , _hash1 (hash1)
+    , _hash2 (hash2)
+    , _eq (equal)
+  {
+    std::copy (first, last, std::inserter (*this, end ()));
+  }
+
+  ~hashtab ()
+  {
+    std::for_each (begin (), end (), [](value_type &v) { v.~value_type (); });
+  }
 
   void
   swap (hashtab &other)
@@ -404,10 +449,10 @@ public:
     return std::make_pair (iterator (this, it._pos), true);
   }
 
-  std::pair<iterator, bool>
+  iterator
   insert (const_iterator, const_reference emt)
   {
-    return insert (emt);
+    return insert (emt).first;
   }
 
   template <class InputIterator>

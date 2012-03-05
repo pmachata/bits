@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <string>
 
 template <int N, class T>
 struct TestVector;
