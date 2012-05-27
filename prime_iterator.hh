@@ -27,6 +27,7 @@
 
 template <class T = unsigned>
 class prime_iterator
+  : public std::iterator<std::input_iterator_tag, T>
 {
   typedef std::vector<bool> sieve_t;
   sieve_t sieve;
@@ -129,11 +130,38 @@ public:
     return *this == rhs.cur;
   }
 
+  bool
+  operator < (prime_iterator rhs) const
+  {
+    return *this < rhs.cur;
+  }
+
   template <class U>
   bool
   operator != (U rhs) const
   {
     return !(*this == rhs);
+  }
+
+  template <class U>
+  bool
+  operator <= (U rhs) const
+  {
+    return *this == rhs || *this < rhs;
+  }
+
+  template <class U>
+  bool
+  operator > (U rhs) const
+  {
+    return !(*this <= rhs);
+  }
+
+  template <class U>
+  bool
+  operator >= (U rhs) const
+  {
+    return !(*this < rhs);
   }
 };
 
